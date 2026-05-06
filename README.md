@@ -4,13 +4,14 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-≥18-339933?style=flat-square&logo=node.js&logoColor=white"/>
   <img alt="Express" src="https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express&logoColor=white"/>
   <img alt="React" src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black"/>
-  <img alt="JWT" src="https://img.shields.io/badge/Auth-JWT%20%2B%20bcrypt-orange?style=flat-square"/>
+  <img alt="Auth" src="https://img.shields.io/badge/Auth-JWT%20%2B%20PBKDF2--SHA512-orange?style=flat-square"/>
   <img alt="AES-256-GCM" src="https://img.shields.io/badge/Encryption-AES--256--GCM-blueviolet?style=flat-square"/>
+  <img alt="Security" src="https://img.shields.io/badge/Security-CSP%20%7C%20CSRF%20%7C%20HSTS-red?style=flat-square"/>
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green?style=flat-square"/>
 </p>
 
-> **Studyo** — Öğrenciler için tasarlanmış, odak zamanlayıcısı, görev yöneticisi, istatistik takibi ve şifreli dosya kütüphanesini tek çatı altında toplayan self-hosted çalışma panosu.  
-> *A self-hosted study dashboard unifying a focus timer, task manager, statistics and an encrypted file library — built for students.*
+> **Studyo** — Öğrenciler için tasarlanmış, odak zamanlayıcısı, görev yöneticisi, istatistik takibi, ders programı, Spotify entegrasyonu ve şifreli dosya kütüphanesini tek çatı altında toplayan self-hosted çalışma panosu.  
+> *A self-hosted study dashboard unifying a focus timer, task manager, statistics, class schedule, Spotify integration and an encrypted file library — built for students.*
 
 **Live demo:** [mywebapps.store/studyo](https://mywebapps.store/studyo)
 
@@ -31,6 +32,8 @@
 
 ---
 
+---
+
 ## Özellikler / Features
 
 ### 🍅 Pomodoro & Zamanlayıcı / Timer
@@ -41,16 +44,18 @@
 | **Kronometre** | Serbest süre takibi |
 | **Geri Sayım** | Sabit hedef süresi (1–180 dk) |
 
-- Animasyonlu dairesel ilerleme çubuğu  
-- Otomatik faz geçişi (Odak → Mola → Odak…)  
+- Animasyonlu dairesel ilerleme çubuğu
+- Otomatik faz geçişi (Odak → Mola → Odak…)
 - Günlük odak dakikası birikimi
+- Masaüstü ve mobilde tam ekran zamanlayıcı desteği
 
 ### ✅ Görev Yönetimi / Task Management
 
 - Kurs bazlı görev oluşturma (ad, kurs, tahmini süre, öncelik)
-- Öncelik renk kodlaması: Yüksek / Orta / Düşük
+- Öncelik renk kodlaması: 🔴 Yüksek / 🟡 Orta / 🟢 Düşük
 - Tamamlananları ayrı listelemek için filtre
-- Sürükle-bırak sıralama (klavye desteğiyle)
+- Sürükle-bırak sıralama
+- Mobilde tam ekran görev listesi desteği
 
 ### 📊 İstatistikler & Aktivite / Statistics & Activity
 
@@ -58,34 +63,50 @@
 - **Haftalık Bar Grafik** — 7 günlük odak dakikası
 - **Aktivite Haritası (Heatmap)** — 13 hafta × 7 gün, 5 yoğunluk seviyesi
 - **Streak** — ardışık aktif gün sayacı
-- Stat kartları: en uzun seans, tamamlama oranı, en iyi gün
+- Stat kartları: **en uzun seans** (gerçek geçirilen süre), toplam seans sayısı, en iyi gün, tamamlama oranı
 
 ### 📅 Ders Programı / Class Schedule
 
 - Günlük ders kartları (oda, başlangıç/bitiş saati, renk etiketi)
 - Gerçek zamanlı durum: **Bitti / Şimdi / Sıradaki**
+- Mobilde bugünün dersleri paneli tam destekli
 
 ### 📝 Hızlı Not / Quick Notes
 
 - Kalıcı, formatsız metin alanı (20.000 karakter)
-- Sunucuya şifreli olarak kaydedilir
+- Sunucuya AES-256-GCM ile şifreli olarak kaydedilir
 
 ### 🎵 Ortam Sesleri / Ambient Sounds
 
-Yağmur · Kafe · Orman · Şömine · Deniz · Klavye
+Telif hakkı içermeyen (copyright-free) sesler:
+
+Yağmur · Ağır Yağmur · Kafe · Orman · Şömine · Deniz · Klavye · Rüzgar · Nehir · Gece Sesleri
+
+- Ses seviyesi kişi başı ayarlanabilir
+- Birden fazla ses aynı anda çalınabilir
+
+### 🎵 Spotify Entegrasyonu / Spotify Integration
+
+- OAuth PKCE akışı ile kişisel Spotify bağlantısı
+- Şu an çalan parça bilgisi (albüm kapağı, sanatçı, parça adı)
+- Oynatma kontrolleri: önceki, oynat/duraklat, sonraki
+- Token yenileme **sunucu üzerinden** (credentials tarayıcıya açılmaz)
+- Bağlantı bilgileri kullanıcıya özel şifreli depolanır
 
 ### 📁 Dosya Kütüphanesi / Encrypted File Library
 
 - Dosya başı **256 MB** limitiyle yükleme
 - Sunucuda **AES-256-GCM** ile şifrelenmiş depolama
 - Her kullanıcı yalnızca kendi dosyalarına erişir
-- Güvenli uzantı engel listesi (`.js`, `.php`, `.exe` vb.)
+- İzin verilenler dışındaki uzantılar engellenir (strict allow-list)
 
 ### 👤 Kimlik Doğrulama / Authentication
 
 - E-posta + şifre ile kayıt/giriş
 - İlk çalıştırmada **kurulum sihirbazı** (admin hesabı oluşturur)
 - `httpOnly` + `SameSite=Strict` JWT cookie
+- **Şifre hashleme:** PBKDF2-SHA512 (200.000 iterasyon, rastgele salt, pepper ile HMAC)
+- Mevcut bcrypt hash'ler ilk girişte otomatik PBKDF2'ye taşınır
 - Brute-force koruması: giriş 10/15 dk, kayıt 5/saat
 
 ### 🔧 Yönetici Paneli / Admin Panel
@@ -97,9 +118,17 @@ Yağmur · Kafe · Orman · Şömine · Deniz · Klavye
 ### 🌐 Çoklu Dil & Tema / i18n & Theming
 
 - **Türkçe** ve **İngilizce** tam çeviri
-- Açık / Koyu tema  
-- Sıkışık / Ferah yoğunluk  
+- Açık / Koyu tema (tercih sunucu tarafında kalıcı olarak saklanır)
+- Sıkışık / Ferah yoğunluk
 - Vurgu rengi seçici
+- Arkaplan görsel teması (tercih kaydedilir, oturum kapanınca kaybolmaz)
+
+### 📱 Mobil Deneyim / Mobile Experience
+
+- Tab-bar navigasyon (Zamanlayıcı · Görevler · Ders Programı · İstatistik · Notlar · Dosyalar)
+- Ayarlar paneli: profil, tema, dil, Spotify, hesap yönetimi
+- Karanlık tema mobilde tam destekli
+- Her sekmenin kaydırma pozisyonu bağımsız (diğer sekmeleri etkilemez)
 
 ---
 
@@ -107,7 +136,7 @@ Yağmur · Kafe · Orman · Şömine · Deniz · Klavye
 
 | Masaüstü / Desktop | Mobil / Mobile |
 |---|---|
-| ![Desktop](pc.png) | ![Mobile](tel.PNG) |
+| ![Desktop](pc1.png) | ![Mobile](tel1.PNG) |
 
 ---
 
@@ -119,13 +148,14 @@ Yağmur · Kafe · Orman · Şömine · Deniz · Klavye
 |--------|-----------|
 | Runtime | Node.js ≥ 18 |
 | Web çerçevesi | Express 4 |
-| Kimlik doğrulama | jsonwebtoken (HS256, 7 gün) + bcrypt (12 round) |
+| Kimlik doğrulama | jsonwebtoken (HS256, 7 gün) + PBKDF2-SHA512 (200k iter, salt+pepper) |
 | Şifreleme | Node.js `crypto` — AES-256-GCM |
 | Dosya yükleme | multer (disk storage → şifreli depolama) |
-| Güvenlik başlıkları | helmet (CSP, X-Frame-Options, MIME-sniffing vb.) |
+| Güvenlik başlıkları | helmet (CSP, HSTS, X-Frame-Options, MIME-sniffing) |
+| CSRF koruması | `X-Requested-With` header kontrolü (custom middleware) |
 | Rate limiting | express-rate-limit |
 | Cookie | cookie-parser |
-| Veri deposu | JSON dosya tabanlı (atomic write, şifreli payload) |
+| Veri deposu | SQLite (`studyo.db`) |
 
 ### Frontend
 
@@ -144,33 +174,40 @@ Yağmur · Kafe · Orman · Şömine · Deniz · Klavye
 ## Güvenlik Mimarisi / Security Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                     İstemci                         │
-│  React SPA  ←→  httpOnly JWT Cookie (SameSite=Strict)│
-└────────────────────────┬────────────────────────────┘
-                         │ HTTPS (prod)
-┌────────────────────────▼────────────────────────────┐
-│                    Express API                       │
-│  Helmet CSP  │  Rate Limiter  │  requireAuth/Admin   │
-└────────────────────────┬────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                         İstemci                             │
+│  React SPA  ←→  httpOnly JWT Cookie (SameSite=Strict)       │
+│              ←→  X-Requested-With: studyo-app (CSRF)        │
+└────────────────────────┬────────────────────────────────────┘
+                         │ HTTPS (TLS 1.2+, HSTS 1 yıl)
+┌────────────────────────▼────────────────────────────────────┐
+│                    Express API                               │
+│  Helmet CSP  │  HSTS  │  CSRF Middleware  │  Rate Limiter   │
+│  requireAuth │  requireAdmin │  Spotify Proxy               │
+└────────────────────────┬────────────────────────────────────┘
                          │
-┌────────────────────────▼────────────────────────────┐
-│              Veri Katmanı (JSON dosyası)              │
-│  Uygulama durumu: AES-256-GCM şifreli JSON           │
-│  Dosyalar: AES-256-GCM şifreli binary                │
-│  Şifreler: bcrypt (cost=12)                          │
-└─────────────────────────────────────────────────────┘
+┌────────────────────────▼────────────────────────────────────┐
+│                  Veri Katmanı (SQLite)                       │
+│  Uygulama durumu: AES-256-GCM şifreli JSON                  │
+│  Dosyalar: AES-256-GCM şifreli binary                       │
+│  Şifreler: PBKDF2-SHA512 (200k iter, salt + pepper)         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 | Tehdit | Koruma |
 |--------|--------|
-| XSS | `httpOnly` cookie, Helmet CSP |
-| CSRF | `SameSite=Strict` cookie |
+| XSS | `httpOnly` cookie, Helmet CSP (strict-dynamic, nonce) |
+| CSRF | `SameSite=Strict` cookie + `X-Requested-With` header kontrolü |
 | Brute-force girişi | Rate limiter (10 deneme / 15 dk) |
-| Timing saldırısı | Her zaman `bcrypt.compare` çalışır (dummy hash) |
-| Kötü amaçlı yükleme | Uzantı engel listesi + MIME doğrulama |
+| Timing saldırısı | Her zaman tam hash kontrolü (dummy hash) |
+| Kötü amaçlı yükleme | Strict allow-list (izin verilen uzantılar dışı engel) |
 | Dosya sızıntısı | Her dosya AES-256-GCM ile şifrelenir, kullanıcı izole |
+| Şifre sızıntısı | PBKDF2-SHA512 + rastgele salt + pepper (HMAC) |
+| Spotify credentials | Token exchange sunucu proxy üzerinden; client secret frontend'e hiç gelmez |
+| postMessage | Tüm iletişim `window.location.origin` hedefli, listener'larda origin doğrulaması |
+| Setup endpoint | Rate limit (5/saat) + opsiyonel `SETUP_SECRET` env var |
 | Gizli yönetim | `JWT_SECRET` ve `APP_DATA_KEY` otomatik üretilir, `.env`'e yazılır |
+| Transport | HSTS (31536000s, includeSubDomains, preload) |
 
 ---
 
@@ -226,7 +263,10 @@ npm run dev
 | `JWT_SECRET` | otomatik | JWT imzalama anahtarı (≥64 karakter) | *otomatik üretilir* |
 | `APP_DATA_KEY` | otomatik | AES-256 veri şifreleme anahtarı (base64, 32 byte) | *otomatik üretilir* |
 | `DATA_FILE_PATH` | hayır | JSON veri deposu yolu | `./storage/app-data.json` |
-| `NODE_ENV` | hayır | `production` → HTTPS cookie zorlanır | `development` |
+| `NODE_ENV` | hayır | `production` → HTTPS cookie, HSTS, upgradeInsecureRequests | `development` |
+| `SETUP_SECRET` | hayır | /api/setup endpoint'ine ek gizli doğrulama | *devre dışı* |
+| `SPOTIFY_CLIENT_ID` | hayır | Spotify Developer app client ID | — |
+| `SPOTIFY_CLIENT_SECRET` | hayır | Spotify Developer app client secret | — |
 
 > **Not:** `JWT_SECRET` veya `APP_DATA_KEY` tanımlı değilse sunucu bunları otomatik üretir. Üretim ortamında `.env` dosyasını kendiniz belirleyin ve kesinlikle gizli tutun.
 
@@ -364,13 +404,17 @@ pm2 startup
 
 ### Veri Deposu
 
-Proje bir **JSON dosya tabanlı veri deposu** kullanır (`storage/app-data.json`). SQLite veya başka bir veritabanı gerektirmez; her yazma işlemi atomic (geçici dosya + rename) şekilde gerçekleştirilir.
+Proje **SQLite** (`studyo.db`) kullanır. Ek bir veritabanı sunucusu gerektirmez.
+
+### Şifre Güvenliği
+
+`server.js` PBKDF2-SHA512 kullanır: her şifre için rastgele `salt` üretilir, ardından `APP_DATA_KEY`'in ilk 32 byte'ı ile HMAC (pepper) uygulanır, ardından 200.000 iterasyonla PBKDF2 türetimi yapılır. Eski bcrypt hash'ler ilk girişte otomatik taşınır.
 
 ### Gizli Anahtar Yönetimi
 
 `server.js` başlarken `.env` dosyasını okur. `JWT_SECRET` veya `APP_DATA_KEY` eksikse:
-1. `crypto.randomBytes()` ile güvenli anahtar üretir.  
-2. Anahtarı `.env`'e yazar.  
+1. `crypto.randomBytes()` ile güvenli anahtar üretir.
+2. Anahtarı `.env`'e yazar.
 3. Terminale bilgi mesajı yazdırır.
 
 Bu sayede ilk kurulumda ek adım gerekmez.
@@ -378,8 +422,8 @@ Bu sayede ilk kurulumda ek adım gerekmez.
 ### Frontend Mimarisi
 
 React, Babel ve Lucide CDN üzerinden yüklenir; derleme aracı (`webpack`, `vite` vb.) yoktur. Tüm bileşenler browser'da transpile edilir. Bu yaklaşım:
-- Bağımlılık karmaşıklığını sıfıra indirir  
-- Sunucu üzerinde doğrudan düzenlemeye olanak tanır  
+- Bağımlılık karmaşıklığını sıfıra indirir
+- Sunucu üzerinde doğrudan düzenlemeye olanak tanır
 - CI/CD pipeline gerektirmez
 
 ---
