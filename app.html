@@ -2647,7 +2647,15 @@ const STRINGS = {
       "Disiplin, motivasyondan güçlüdür."
     ],
     weekdays: ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"],
-    months: ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"]
+    months: ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"],
+    priority: "Öncelik",
+    dueDate: "Tarih",
+    overdue: "Gecikmiş",
+    noDueDate: "Tarihi yok",
+    high: "Yüksek",
+    med: "Orta",
+    low: "Düşük",
+    tasksDue: "Teslim günü",
   },
   en: {
     appName: "Studyo",
@@ -2722,7 +2730,15 @@ const STRINGS = {
       "Discipline beats motivation."
     ],
     weekdays: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-    months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    priority: "Priority",
+    dueDate: "Due",
+    overdue: "Overdue",
+    noDueDate: "No due date",
+    high: "High",
+    med: "Med",
+    low: "Low",
+    tasksDue: "Due today",
   }
 };
 
@@ -3302,9 +3318,13 @@ function SettingStepper({ label, value, setValue, min, max, step, accent }) {
    TASKS widget
    ============================================================ */
 function TasksWidget({ tasks, setTasks }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState("all");
+  const [draftPriority, setDraftPriority] = useState("med");
+  const [draftDueDate, setDraftDueDate] = useState("");
+
+  const PRIO_COLORS = { high: 'var(--danger)', med: 'var(--warning)', low: 'var(--info)' };
 
   const remaining = tasks.filter(x => !x.done).length;
   const total = tasks.length;
@@ -3314,8 +3334,10 @@ function TasksWidget({ tasks, setTasks }) {
 
   const add = () => {
     if (!draft.trim()) return;
-    setTasks([...tasks, { id: Date.now(), title: draft.trim(), done: false, est: 30, priority: "med" }]);
+    setTasks([...tasks, { id: Date.now(), title: draft.trim(), done: false, est: 30, priority: draftPriority, dueDate: draftDueDate }]);
     setDraft("");
+    setDraftPriority("med");
+    setDraftDueDate("");
   };
   const toggle = (id) => setTasks(tasks.map(x => x.id === id ? { ...x, done: !x.done } : x));
   const remove = (id) => setTasks(tasks.filter(x => x.id !== id));
@@ -3342,15 +3364,33 @@ function TasksWidget({ tasks, setTasks }) {
       </div>
 
       {/* Add input */}
-      <div className="sd-input">
-        <Icon name="plus" size={16} style={{ color: 'var(--fg3)' }} />
-        <input
-          placeholder={t.addTaskHint}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") add(); }}
-        />
-        {draft && <button className="sd-btn sd-btn--primary" style={{ padding: '6px 12px', fontSize: 12 }} onClick={add}>{t.addTask}</button>}
+      <div style={{ background: 'var(--surface-elevated)', borderRadius: 14, border: '1.5px solid var(--separator)', overflow: 'hidden' }}>
+        <div className="sd-input" style={{ border: 'none', borderRadius: 0, background: 'transparent', padding: '10px 12px' }}>
+          <Icon name="plus" size={16} style={{ color: 'var(--fg3)' }} />
+          <input
+            placeholder={t.addTaskHint}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") add(); }}
+            style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 14, fontWeight: 600, color: 'var(--fg1)', fontFamily: 'inherit' }}
+          />
+          {draft && <button className="sd-btn sd-btn--primary" style={{ padding: '6px 12px', fontSize: 12 }} onClick={add}>{t.addTask}</button>}
+        </div>
+        {draft && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px 10px', flexWrap: 'wrap' }}>
+            {(['low', 'med', 'high']).map(p => (
+              <button key={p} onClick={() => setDraftPriority(p)} style={{
+                padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, border: `1.5px solid ${draftPriority === p ? PRIO_COLORS[p] : 'var(--separator)'}`,
+                background: draftPriority === p ? PRIO_COLORS[p] + '22' : 'transparent',
+                color: draftPriority === p ? PRIO_COLORS[p] : 'var(--fg3)', cursor: 'pointer', fontFamily: 'inherit',
+              }}>{t[p]}</button>
+            ))}
+            <input type="date" value={draftDueDate} onChange={e => setDraftDueDate(e.target.value)} style={{
+              marginLeft: 'auto', border: '1.5px solid var(--separator)', borderRadius: 8, padding: '3px 8px',
+              fontSize: 11, fontWeight: 700, color: 'var(--fg2)', background: 'var(--fill-3)', fontFamily: 'inherit', cursor: 'pointer',
+            }} />
+          </div>
+        )}
       </div>
 
       {/* List */}
@@ -3365,19 +3405,28 @@ function TasksWidget({ tasks, setTasks }) {
 }
 
 function TaskRow({ task, onToggle, onRemove }) {
+  const { t } = useT();
   const prio = task.priority || "med";
   const prioColor = prio === "high" ? "var(--danger)" : prio === "med" ? "var(--warning)" : "var(--info)";
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const isOverdue = task.dueDate && !task.done && task.dueDate < todayIso;
+  const isDueToday = task.dueDate && task.dueDate === todayIso;
+  const dueDateColor = isOverdue ? 'var(--danger)' : isDueToday ? 'var(--warning)' : 'var(--fg-muted)';
+  const dueDateLabel = task.dueDate ? task.dueDate.slice(5).replace('-', '/') : null;
+
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '10px 8px',
       borderRadius: 12,
       transition: 'background 0.15s',
-      background: 'transparent',
+      background: isOverdue && !task.done ? 'var(--danger-light, rgba(255,59,48,0.06))' : 'transparent',
     }}
     onMouseEnter={e => e.currentTarget.style.background = 'var(--fill-3)'}
-    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    onMouseLeave={e => e.currentTarget.style.background = isOverdue && !task.done ? 'var(--danger-light, rgba(255,59,48,0.06))' : 'transparent'}
     >
+      <div style={{ width: 8, height: 8, borderRadius: 99, background: task.done ? 'var(--fg-muted)' : prioColor, flexShrink: 0 }} />
       <button className={`sd-check ${task.done ? "sd-check--on" : ""}`} onClick={onToggle}>
         {task.done && <Icon name="check" size={12} stroke={3} />}
       </button>
@@ -3391,11 +3440,18 @@ function TaskRow({ task, onToggle, onRemove }) {
         }}>
           {task.title}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, fontSize: 11, color: 'var(--fg3)', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, fontSize: 11, color: 'var(--fg3)', fontWeight: 600, flexWrap: 'wrap' }}>
           {task.course && <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: 0.4 }}>{task.course}</span>}
           {task.course && <span style={{ width: 3, height: 3, borderRadius: 99, background: 'var(--fg-muted)' }} />}
           <span>{task.est}m</span>
-          <span style={{ width: 6, height: 6, borderRadius: 99, background: prioColor, marginLeft: 'auto' }} />
+          <span style={{ color: prioColor }}>{t[prio]}</span>
+          {dueDateLabel && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3, color: dueDateColor, marginLeft: 'auto' }}>
+              {isOverdue && <Icon name="alert-circle" size={10} />}
+              {isDueToday && <Icon name="clock" size={10} />}
+              {dueDateLabel}
+            </span>
+          )}
         </div>
       </div>
       <button onClick={onRemove} className="sd-btn" style={{ padding: 6, opacity: 0.5, background: 'transparent' }}>
@@ -3562,7 +3618,7 @@ function heatColor(v) {
 /* ============================================================
    SCHEDULE — today's classes
    ============================================================ */
-function ScheduleWidget({ classes, now, onOpenCalendar, onImportCalendar, onAddClass, onRemoveClass, compact = false, maxItems }) {
+function ScheduleWidget({ classes, tasks: tasksProp = [], now, onOpenCalendar, onImportCalendar, onAddClass, onRemoveClass, compact = false, maxItems }) {
   const { t, lang } = useT();
   const tr = lang === 'tr';
   const nowM = now.getHours() * 60 + now.getMinutes();
@@ -3584,6 +3640,11 @@ function ScheduleWidget({ classes, now, onOpenCalendar, onImportCalendar, onAddC
     .filter((c) => !c.date || c.date === todayIso)
     .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
   const visibleClasses = Number.isFinite(maxItems) ? todaysClasses.slice(0, maxItems) : todaysClasses;
+
+  // Today's tasks (due today, not done)
+  const PRIO_COLORS = { high: 'var(--danger)', med: 'var(--warning)', low: 'var(--info)' };
+  const todayTasks = (tasksProp || []).filter(x => x.dueDate === todayIso && !x.done);
+  const visibleTasks = Number.isFinite(maxItems) ? todayTasks.slice(0, Math.max(0, maxItems - visibleClasses.length)) : todayTasks;
 
   function status(c) {
     const [sh, sm] = String(c.start || '09:00').split(":").map(Number);
@@ -3625,13 +3686,15 @@ function ScheduleWidget({ classes, now, onOpenCalendar, onImportCalendar, onAddC
     setFormOpen(false);
   }
 
+  const totalCount = todaysClasses.length + todayTasks.length;
+
   return (
     <div className="sd-card sd-card-pad" style={{ display: 'flex', flexDirection: 'column', gap: compact ? 10 : 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <div>
           <div className="sd-eyebrow">{t.schedule}</div>
           <div className="sd-h3" style={{ marginTop: 4 }}>
-            {todaysClasses.length} <span style={{ color: 'var(--fg3)', fontWeight: 600, fontSize: 14 }}>{tr ? 'bugün' : 'today'}</span>
+            {todaysClasses.length}{todayTasks.length > 0 && <span style={{ color: 'var(--primary)', fontWeight: 700 }}> +{todayTasks.length}</span>} <span style={{ color: 'var(--fg3)', fontWeight: 600, fontSize: 14 }}>{tr ? 'bugün' : 'today'}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -3678,8 +3741,8 @@ function ScheduleWidget({ classes, now, onOpenCalendar, onImportCalendar, onAddC
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 8 : 6 }}>
-        {todaysClasses.length === 0 && (
-          <div className="sd-empty"><Icon name="calendar-x2" size={18} /> {tr ? 'Bugün planlanmış ders yok' : 'No classes scheduled today'}</div>
+        {totalCount === 0 && (
+          <div className="sd-empty"><Icon name="calendar-x2" size={18} /> {tr ? 'Bugün planlanmış ders veya görev yok' : 'Nothing scheduled for today'}</div>
         )}
         {visibleClasses.map(c => {
           const st = status(c);
@@ -3728,6 +3791,46 @@ function ScheduleWidget({ classes, now, onOpenCalendar, onImportCalendar, onAddC
           <div className="sd-meta" style={{ paddingTop: 2 }}>
             {tr ? `+${todaysClasses.length - visibleClasses.length} ders daha` : `+${todaysClasses.length - visibleClasses.length} more classes`}
           </div>
+        )}
+        {/* Today's due tasks */}
+        {visibleTasks.length > 0 && (
+          <>
+            {todaysClasses.length > 0 && <div className="sd-divider-dotted" style={{ margin: '2px 0' }} />}
+            <div className="sd-eyebrow" style={{ fontSize: 10, color: 'var(--primary)', paddingLeft: 4 }}>{t.tasksDue}</div>
+            {visibleTasks.map(task => {
+              const prioColor = PRIO_COLORS[task.priority || 'med'];
+              return (
+                <div key={task.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: compact ? '8px 10px' : '9px 12px',
+                  borderRadius: compact ? 12 : 14,
+                  background: 'var(--primary-light)',
+                  border: '1px solid var(--primary)',
+                  transition: 'all 0.15s',
+                }}>
+                  <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 99, background: prioColor }} />
+                  <Icon name="check-square" size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: 'var(--fg1)', letterSpacing: '-0.2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {task.title}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 2, fontSize: compact ? 10 : 11, color: 'var(--fg3)', fontWeight: 600 }}>
+                      {task.course && <span>{task.course}</span>}
+                      <span style={{ color: prioColor }}>{t[task.priority || 'med']}</span>
+                    </div>
+                  </div>
+                  <span className="sd-pill" style={{ fontSize: 10, background: 'var(--primary)', color: '#fff', padding: '2px 7px', borderRadius: 8 }}>
+                    {tr ? 'Bugün' : 'Today'}
+                  </span>
+                </div>
+              );
+            })}
+            {compact && todayTasks.length > visibleTasks.length && (
+              <div className="sd-meta" style={{ paddingTop: 2 }}>
+                {tr ? `+${todayTasks.length - visibleTasks.length} görev daha` : `+${todayTasks.length - visibleTasks.length} more tasks`}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -4234,7 +4337,7 @@ function DesktopApp({ tweaks, setTweak, user, onLogout, appState, onAppStateChan
             <StatTile icon="list-checks" label={lang === 'tr' ? 'Aktif görev' : 'Open tasks'} value={String(tasks.filter((x) => !x.done).length)} sub={lang === 'tr' ? 'listede' : 'in list'} />
           </div>
           <NotesWidget value={notes} setValue={setNotes} />
-          <ScheduleWidget classes={classes} now={now} onOpenCalendar={() => setCalendarOpen(true)} onImportCalendar={importCalendar} onAddClass={addClass} onRemoveClass={removeClass} compact maxItems={3} />
+          <ScheduleWidget classes={classes} tasks={tasks} now={now} onOpenCalendar={() => setCalendarOpen(true)} onImportCalendar={importCalendar} onAddClass={addClass} onRemoveClass={removeClass} compact maxItems={3} />
         </div>
       </div>
     );
@@ -4263,7 +4366,7 @@ function DesktopApp({ tweaks, setTweak, user, onLogout, appState, onAppStateChan
             {visible.notes && <NotesWidget value={notes} setValue={setNotes} />}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {visible.schedule && <ScheduleWidget classes={classes} now={now} onOpenCalendar={() => setCalendarOpen(true)} onImportCalendar={importCalendar} onAddClass={addClass} onRemoveClass={removeClass} />}
+            {visible.schedule && <ScheduleWidget classes={classes} tasks={tasks} now={now} onOpenCalendar={() => setCalendarOpen(true)} onImportCalendar={importCalendar} onAddClass={addClass} onRemoveClass={removeClass} />}
             {visible.chart && <WeeklyChart data={week} />}
             {visible.heatmap && <HeatmapWidget cells={heatmap} />}
           </div>
@@ -5512,7 +5615,7 @@ function MobileHome({ tweaks, setTweak, now, tasks, setTasks, days7, classes, se
 
       <StreakWidget streak={streak} days7={days7} compact />
 
-      <ScheduleWidget classes={classes} now={now} compact maxItems={2}
+      <ScheduleWidget classes={classes} tasks={tasks} now={now} compact maxItems={2}
         onAddClass={setClasses ? (cls) => setClasses(prev => [...prev, cls]) : undefined}
         onRemoveClass={setClasses ? (id) => setClasses(prev => prev.filter(c => c.id !== id)) : undefined}
       />
@@ -5568,12 +5671,16 @@ function MobileTasks({ tasks, setTasks }) {
   const [draft, setDraft] = useState('');
   const [filter, setFilter] = useState('all');
   const [draftPriority, setDraftPriority] = useState('med');
+  const [draftDueDate, setDraftDueDate] = useState('');
+
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   const add = () => {
     if (!draft.trim()) return;
-    setTasks([...tasks, { id: Date.now(), title: draft.trim(), done: false, est: 30, priority: draftPriority }]);
+    setTasks([...tasks, { id: Date.now(), title: draft.trim(), done: false, est: 30, priority: draftPriority, dueDate: draftDueDate }]);
     setDraft('');
     setDraftPriority('med');
+    setDraftDueDate('');
   };
   const toggle = (id) => setTasks(tasks.map(x => x.id === id ? { ...x, done: !x.done } : x));
   const remove = (id) => setTasks(tasks.filter(x => x.id !== id));
@@ -5647,7 +5754,7 @@ function MobileTasks({ tasks, setTasks }) {
           )}
         </div>
         {draft && (
-          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px' }}>
+          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px', alignItems: 'center', flexWrap: 'wrap' }}>
             {(['low', 'med', 'high']).map(p => (
               <button key={p} onClick={() => setDraftPriority(p)} style={{
                 padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
@@ -5657,6 +5764,10 @@ function MobileTasks({ tasks, setTasks }) {
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>{PRIO_LABELS[p]}</button>
             ))}
+            <input type="date" value={draftDueDate} onChange={e => setDraftDueDate(e.target.value)} style={{
+              marginLeft: 'auto', border: '1.5px solid var(--separator)', borderRadius: 8, padding: '4px 10px',
+              fontSize: 11, fontWeight: 700, color: 'var(--fg2)', background: 'var(--fill-3)', fontFamily: 'inherit',
+            }} />
           </div>
         )}
       </div>
@@ -5675,12 +5786,15 @@ function MobileTasks({ tasks, setTasks }) {
         )}
         {filtered.map(task => {
           const prioColor = PRIO_COLORS[task.priority] || PRIO_COLORS.med;
+          const isOverdue = task.dueDate && !task.done && task.dueDate < todayIso;
+          const isDueToday = task.dueDate && task.dueDate === todayIso;
+          const dueDateColor = isOverdue ? 'var(--danger)' : isDueToday ? 'var(--warning)' : 'var(--fg-muted)';
           return (
             <div key={task.id} style={{
               display: 'flex', alignItems: 'center', gap: 12,
-              background: task.done ? 'var(--fill-2)' : 'var(--surface-elevated)',
+              background: task.done ? 'var(--fill-2)' : isOverdue ? 'rgba(255,59,48,0.06)' : 'var(--surface-elevated)',
               borderRadius: 16, padding: '13px 14px',
-              border: task.done ? '1.5px solid transparent' : `1.5px solid var(--separator)`,
+              border: task.done ? '1.5px solid transparent' : isOverdue ? '1.5px solid var(--danger)' : `1.5px solid var(--separator)`,
               transition: 'all 0.2s',
             }}>
               {/* Priority dot */}
@@ -5696,10 +5810,17 @@ function MobileTasks({ tasks, setTasks }) {
                   textDecoration: task.done ? 'line-through' : 'none',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{task.title}</div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 3, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 6, marginTop: 3, alignItems: 'center', flexWrap: 'wrap' }}>
                   {task.course && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-light)', padding: '1px 6px', borderRadius: 6 }}>{task.course}</span>}
                   <span className="sd-meta" style={{ fontSize: 10 }}>{task.est}m</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: prioColor, marginLeft: 'auto' }}>{PRIO_LABELS[task.priority || 'med']}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: prioColor }}>{PRIO_LABELS[task.priority || 'med']}</span>
+                  {task.dueDate && (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: dueDateColor, marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {isOverdue && <Icon name="alert-circle" size={10} />}
+                      {isDueToday && <Icon name="clock" size={10} />}
+                      {task.dueDate.slice(5).replace('-', '/')}
+                    </span>
+                  )}
                 </div>
               </div>
               <button onClick={() => remove(task.id)} style={{ padding: 6, background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.4 }}>
