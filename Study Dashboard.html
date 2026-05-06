@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studyo — Study Dashboard</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,800;1,9..144,800&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    body { margin: 0; background: #2A1F12; }
+    #root { min-height: 100vh; }
+    /* Override design canvas chrome to be warm */
+    .dc-canvas { background: #2A1F12 !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "lang": "tr",
+      "theme": "light",
+      "density": "comfy",
+      "h12": false,
+      "widgets": {
+        "stats": true,
+        "timer": true,
+        "streak": true,
+        "music": true,
+        "tasks": true,
+        "notes": true,
+        "schedule": true,
+        "chart": true,
+        "heatmap": true
+      }
+    }/*EDITMODE-END*/;
+  </script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="app-core.jsx"></script>
+  <script type="text/babel" src="widgets-timer-tasks.jsx"></script>
+  <script type="text/babel" src="widgets-rest.jsx"></script>
+  <script type="text/babel" src="desktop.jsx"></script>
+  <script type="text/babel" src="mobile.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function Root() {
+      const [tweaks, setTweaks] = useTweaks(TWEAK_DEFAULTS);
+      const setTweak = (k, v) => {
+        if (typeof k === 'object') setTweaks(k);
+        else setTweaks({ [k]: v });
+      };
+
+      // Apply theme to document
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', tweaks.theme);
+      }, [tweaks.theme]);
+
+      // Init lucide icons after render
+      useEffect(() => {
+        const id = setInterval(() => {
+          if (window.lucide) { clearInterval(id); }
+        }, 50);
+        return () => clearInterval(id);
+      }, []);
+
+      return (
+        <>
+          <DesignCanvas defaultZoom={0.78} background="#2A1F12" gridColor="rgba(255,200,140,0.05)">
+            <DCSection id="desktop" title="Studyo — Desktop">
+              <DCArtboard id="d-main" label="Dashboard · 1440 × 920" width={1440} height={920}>
+                <DesktopApp tweaks={tweaks} setTweak={setTweak} />
+              </DCArtboard>
+            </DCSection>
+            <DCSection id="mobile" title="Studyo — Mobile">
+              <DCArtboard id="m-home" label="Anasayfa" width={402} height={874}>
+                <IOSDevice width={402} height={874} dark={tweaks.theme === 'dark'}>
+                  <MobileWithTab tweaks={tweaks} setTweak={setTweak} initial="home" />
+                </IOSDevice>
+              </DCArtboard>
+              <DCArtboard id="m-timer" label="Timer" width={402} height={874}>
+                <IOSDevice width={402} height={874} dark={tweaks.theme === 'dark'}>
+                  <MobileWithTab tweaks={tweaks} setTweak={setTweak} initial="timer" />
+                </IOSDevice>
+              </DCArtboard>
+              <DCArtboard id="m-tasks" label="Tasks" width={402} height={874}>
+                <IOSDevice width={402} height={874} dark={tweaks.theme === 'dark'}>
+                  <MobileWithTab tweaks={tweaks} setTweak={setTweak} initial="tasks" />
+                </IOSDevice>
+              </DCArtboard>
+              <DCArtboard id="m-stats" label="Stats" width={402} height={874}>
+                <IOSDevice width={402} height={874} dark={tweaks.theme === 'dark'}>
+                  <MobileWithTab tweaks={tweaks} setTweak={setTweak} initial="stats" />
+                </IOSDevice>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection title="Görünüm">
+              <TweakRadio
+                label="Tema"
+                value={tweaks.theme}
+                onChange={(v) => setTweak('theme', v)}
+                options={[{ value: 'light', label: 'Açık' }, { value: 'dark', label: 'Koyu' }]}
+              />
+              <TweakRadio
+                label="Yoğunluk"
+                value={tweaks.density}
+                onChange={(v) => setTweak('density', v)}
+                options={[{ value: 'comfy', label: 'Ferah' }, { value: 'compact', label: 'Sıkışık' }]}
+              />
+              <TweakRadio
+                label="Dil"
+                value={tweaks.lang}
+                onChange={(v) => setTweak('lang', v)}
+                options={[{ value: 'tr', label: 'TR' }, { value: 'en', label: 'EN' }]}
+              />
+              <TweakToggle label="12-saat formatı" value={tweaks.h12} onChange={(v) => setTweak('h12', v)} />
+            </TweakSection>
+            <TweakSection title="Widget'lar">
+              {[
+                ['stats', 'Stat tile satırı'],
+                ['timer', 'Pomodoro / Timer'],
+                ['streak', 'Streak'],
+                ['music', 'Müzik'],
+                ['tasks', 'Görevler'],
+                ['notes', 'Notlar'],
+                ['schedule', 'Ders programı'],
+                ['chart', 'Haftalık grafik'],
+                ['heatmap', 'Heatmap'],
+              ].map(([k, label]) => (
+                <TweakToggle key={k} label={label} value={tweaks.widgets[k]}
+                  onChange={(v) => setTweak('widgets', { ...tweaks.widgets, [k]: v })} />
+              ))}
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    // Wrapper that lets each phone start on a different tab
+    function MobileWithTab({ tweaks, setTweak, initial }) {
+      // Hack: render MobileApp but pre-set its tab via a wrapper key
+      return <MobileAppWithInitialTab tweaks={tweaks} setTweak={setTweak} initial={initial} />;
+    }
+
+    function MobileAppWithInitialTab({ tweaks, setTweak, initial }) {
+      const lang = tweaks.lang;
+      const t = STRINGS[lang];
+      const [tab, setTab] = React.useState(initial);
+      const [tasks, setTasks] = React.useState(DEMO_TASKS);
+      const [now, setNow] = React.useState(new Date());
+      useInterval(() => setNow(new Date()), 1000);
+      const heatmap = React.useMemo(() => makeHeatmap(), []);
+      const days7 = [1, 2, 2, 3, 3, 1, 0];
+
+      return (
+        <I18nContext.Provider value={{ t, lang, setLang: l => setTweak('lang', l) }}>
+        <div className="sd-stage" data-density="compact" style={{ height: '100%', borderRadius: 0 }}>
+          <div className="sd-orbs">
+            <div className="sd-orb" style={{ width: 280, height: 280, top: -90, right: -60, background: 'var(--orb-1)' }} />
+            <div className="sd-orb" style={{ width: 240, height: 240, bottom: 60, left: -60, background: 'var(--orb-2)' }} />
+          </div>
+          <div style={{ position: 'relative', zIndex: 2, height: '100%', overflow: 'auto', paddingBottom: 100 }} className="sd-scroll">
+            {tab === "home" && <MobileHome tweaks={tweaks} setTweak={setTweak} now={now} tasks={tasks} setTasks={setTasks} days7={days7} />}
+            {tab === "timer" && <MobileTimer tweaks={tweaks} />}
+            {tab === "tasks" && <MobileTasks tasks={tasks} setTasks={setTasks} />}
+            {tab === "stats" && <MobileStats data={DEMO_WEEK} cells={heatmap} />}
+          </div>
+          <div style={{
+            position: 'absolute', bottom: 16, left: 16, right: 16,
+            background: 'var(--tab-bg)', backdropFilter: 'blur(28px) saturate(180%)', WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: 24, padding: 8,
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4,
+            boxShadow: 'var(--shadow-xl)', zIndex: 10
+          }}>
+            {[
+              { key: "home", icon: "house", label: t.home },
+              { key: "timer", icon: "timer", label: t.timer },
+              { key: "tasks", icon: "list-checks", label: t.tasks },
+              { key: "stats", icon: "chart-line", label: t.stats },
+            ].map(it => (
+              <button key={it.key} onClick={() => setTab(it.key)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                  padding: '8px 4px',
+                  border: 'none', background: tab === it.key ? 'var(--primary)' : 'transparent',
+                  color: tab === it.key ? '#fff' : 'var(--fg2)',
+                  borderRadius: 16, cursor: 'pointer',
+                  boxShadow: tab === it.key ? 'var(--shadow-amber)' : 'none',
+                  transition: 'all 0.15s'
+                }}>
+                <Icon name={it.icon} size={18} stroke={tab === it.key ? 2.4 : 2.2} />
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.2 }}>{it.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        </I18nContext.Provider>
+      );
+    }
+
+    // Wait for everything to load, then render
+    function tryMount() {
+      if (!window.DesktopApp || !window.MobileApp || !window.useTweaks || !window.DesignCanvas || !window.IOSDevice || !window.lucide) {
+        return setTimeout(tryMount, 50);
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+    }
+    tryMount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+/* LaundryTrack Design System — Colors & Type
+   Source: src/contexts/ThemeContext.js (MrtSrt31/CamasirTakipApp)
+   iOS/Apple system-style palette with glassmorphic surfaces.
+*/
+
+:root {
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Weights actually used in the codebase */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-heavy: 800;
+  --fw-black: 900;
+
+  /* Size scale (from StyleSheet values in codebase) */
+  --fs-9:    9px;   /* micro label */
+  --fs-11:  11px;   /* uppercase micro */
+  --fs-12:  12px;   /* caption / label */
+  --fs-13:  13px;   /* small text / meta */
+  --fs-14:  14px;   /* body-sm / button secondary */
+  --fs-15:  15px;   /* body */
+  --fs-16:  16px;   /* body-lg / input */
+  --fs-17:  17px;   /* button primary / card title */
+  --fs-20:  20px;   /* timer / profile title */
+  --fs-21:  21px;
+  --fs-22:  22px;   /* stat value */
+  --fs-24:  24px;   /* section title */
+  --fs-30:  30px;   /* header title */
+  --fs-34:  34px;   /* hero title */
+
+  /* Tracking */
+  --ls-loose: 0.8px;   /* uppercase micro labels */
+  --ls-wide:  0.5px;
+  --ls-sm:    0.3px;
+  --ls-tight: -0.3px;
+  --ls-tighter: -0.6px;
+  --ls-display: -0.9px; /* large heads */
+
+  /* ---------- LIGHT (default) ---------- */
+  /* Backgrounds */
+  --bg:              #EAF1FA;
+  --bg-secondary:    rgba(255,255,255,0.72);
+  --grouped-bg:      #EDF3FA;
+  --card:            rgba(255,255,255,0.68);
+  --card-border:     rgba(255,255,255,0.78);
+  --surface:         rgba(255,255,255,0.56);
+  --surface-elevated:rgba(255,255,255,0.82);
+
+  /* Text */
+  --fg1:             #000000;     /* text */
+  --fg2:             #3C3C43;     /* textSecondary */
+  --fg3:             #8E8E93;     /* textTertiary */
+  --fg-muted:        #AEAEB2;     /* textMuted */
+  --fg-inverse:      #FFFFFF;
+
+  /* Accent */
+  --primary:         #007AFF;     /* iOS blue */
+  --primary-light:   rgba(0,122,255,0.12);
+  --primary-dark:    #0056CC;
+
+  /* Semantic */
+  --success:         #34C759;
+  --success-light:   rgba(52,199,89,0.12);
+  --warning:         #FF9500;
+  --warning-light:   rgba(255,149,0,0.12);
+  --danger:          #FF3B30;
+  --danger-light:    rgba(255,59,48,0.12);
+  --info:            #5AC8FA;
+  --info-light:      rgba(90,200,250,0.12);
+
+  /* Separators / fills */
+  --separator:       rgba(60,60,67,0.12);
+  --separator-opaque:#C6C6C8;
+  --fill:            rgba(120,120,128,0.20);
+  --fill-2:          rgba(120,120,128,0.16);
+  --fill-3:          rgba(120,120,128,0.12);
+
+  /* Glass / chrome */
+  --header-bg:       rgba(255,255,255,0.18);
+  --tab-bg:          rgba(255,255,255,0.18);
+  --glass:           rgba(255,255,255,0.46);
+  --glass-strong:    rgba(255,255,255,0.74);
+  --glass-border:    rgba(255,255,255,0.60);
+  --glass-tint:      rgba(140,195,255,0.16);
+
+  /* Backdrop orbs (the signature ambient lighting) */
+  --backdrop-primary:   rgba(103,171,255,0.22);
+  --backdrop-secondary: rgba(191,225,255,0.38);
+  --overlay-bg:         rgba(0,0,0,0.32);
+
+  /* Status */
+  --status-running:     #007AFF;
+  --status-running-bg:  rgba(0,122,255,0.10);
+  --status-idle:        #34C759;
+  --status-idle-bg:     rgba(52,199,89,0.10);
+  --status-done:        #FF9500;
+  --status-done-bg:     rgba(255,149,0,0.10);
+  --status-error:       #FF3B30;
+  --status-error-bg:    rgba(255,59,48,0.10);
+
+  /* Shape */
+  --radius-xs:   8px;
+  --radius-sm:  12px;
+  --radius-md:  16px;
+  --radius-lg:  22px;
+  --radius-xl:  28px;
+  --radius-full: 9999px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Shadows (iOS-style, soft & tinted blue-navy) */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 16px rgba(15,23,42,0.08);
+  --shadow-xl: 0 10px 24px rgba(15,23,42,0.10);
+  --shadow-card: 0 10px 20px rgba(15,23,42,0.08);
+}
+
+/* ---------- DARK ---------- */
+[data-theme="dark"] {
+  --bg:              #07101C;
+  --bg-secondary:    rgba(14,24,38,0.72);
+  --grouped-bg:      #07101C;
+  --card:            rgba(14,24,38,0.68);
+  --card-border:     rgba(145,176,214,0.18);
+  --surface:         rgba(17,29,46,0.56);
+  --surface-elevated:rgba(20,33,52,0.82);
+
+  --fg1:             #FFFFFF;
+  --fg2:             #EBEBF5;
+  --fg3:             #8E8E93;
+  --fg-muted:        #636366;
+  --fg-inverse:      #000000;
+
+  --primary:         #0A84FF;
+  --primary-light:   rgba(10,132,255,0.18);
+  --primary-dark:    #409CFF;
+
+  --success:         #30D158;
+  --success-light:   rgba(48,209,88,0.18);
+  --warning:         #FF9F0A;
+  --warning-light:   rgba(255,159,10,0.18);
+  --danger:          #FF453A;
+  --danger-light:    rgba(255,69,58,0.18);
+  --info:            #64D2FF;
+  --info-light:      rgba(100,210,255,0.18);
+
+  --separator:       rgba(84,84,88,0.65);
+  --separator-opaque:#38383A;
+  --fill:            rgba(120,120,128,0.36);
+  --fill-2:          rgba(120,120,128,0.32);
+  --fill-3:          rgba(120,120,128,0.24);
+
+  --header-bg:       rgba(14,24,38,0.18);
+  --tab-bg:          rgba(14,24,38,0.18);
+  --glass:           rgba(11,19,31,0.52);
+  --glass-strong:    rgba(16,28,42,0.76);
+  --glass-border:    rgba(145,176,214,0.20);
+  --glass-tint:      rgba(69,138,255,0.16);
+
+  --backdrop-primary:   rgba(53,112,214,0.26);
+  --backdrop-secondary: rgba(18,40,68,0.52);
+  --overlay-bg:         rgba(0,0,0,0.56);
+
+  --status-running:     #0A84FF;
+  --status-running-bg:  rgba(10,132,255,0.18);
+  --status-idle:        #30D158;
+  --status-idle-bg:     rgba(48,209,88,0.18);
+  --status-done:        #FF9F0A;
+  --status-done-bg:     rgba(255,159,10,0.18);
+  --status-error:       #FF453A;
+  --status-error-bg:    rgba(255,69,58,0.18);
+
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.25);
+  --shadow-xl: 0 10px 24px rgba(0,0,0,0.35);
+  --shadow-card: 0 10px 20px rgba(0,0,0,0.30);
+}
+
+/* ---------- SEMANTIC ELEMENT STYLES ---------- */
+html, body { font-family: var(--font-sans); color: var(--fg1); background: var(--bg); -webkit-font-smoothing: antialiased; }
+
+h1, .h1 { font-size: var(--fs-34); font-weight: var(--fw-heavy); letter-spacing: var(--ls-display); line-height: 1.05; color: var(--fg1); }
+h2, .h2 { font-size: var(--fs-30); font-weight: var(--fw-heavy); letter-spacing: var(--ls-display); line-height: 1.1;  color: var(--fg1); }
+h3, .h3 { font-size: var(--fs-24); font-weight: var(--fw-heavy); letter-spacing: -0.4px; color: var(--fg1); }
+h4, .h4 { font-size: var(--fs-20); font-weight: var(--fw-heavy); letter-spacing: -0.4px; color: var(--fg1); }
+h5, .h5 { font-size: var(--fs-17); font-weight: var(--fw-bold); letter-spacing: var(--ls-tight); color: var(--fg1); }
+
+p, .body { font-size: var(--fs-15); font-weight: var(--fw-regular); line-height: 1.5; color: var(--fg2); }
+.body-lg { font-size: var(--fs-16); line-height: 1.5; }
+.body-sm { font-size: var(--fs-13); line-height: 1.45; color: var(--fg3); }
+.caption { font-size: var(--fs-12); color: var(--fg3); }
+
+/* Micro uppercase label — used all over settings, stat cards, section headers */
+.micro-label {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-heavy);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-loose);
+  color: var(--fg3);
+}
+
+/* Tabular timer */
+.tabular { font-variant-numeric: tabular-nums; }
+
+code, .mono { font-family: var(--font-mono); font-size: var(--fs-13); }

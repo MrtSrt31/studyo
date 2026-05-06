@@ -1,0 +1,14 @@
+node_modules/
+.env
+storage/uploads/
+storage/app-data.json
+storage/app-data.json.tmp
+storage/tmp/
+studyo.db
+studyo.db-shm
+studyo.db-wal
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+/tmp/
