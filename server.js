@@ -386,19 +386,26 @@ const app = express();
 const appRouter = express.Router();
 app.set('trust proxy', 1);
 
+const IS_PROD = process.env.NODE_ENV === 'production';
+
 // Güvenlik başlıkları (XSS, clickjacking, MIME sniffing vb.)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:              ["'self'"],
+      // Babel standalone + CDN React requires unsafe-inline/unsafe-eval; scoped to unpkg only
       scriptSrc:               ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com'],
       styleSrc:                ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:                 ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:                  ["'self'", 'data:', 'https:'],
+      // Spotify OAuth redirect is a navigation (window.location), not a fetch,
+      // so connectSrc stays 'self' — token exchange now proxied via /api/spotify/*
       connectSrc:              ["'self'"],
-      upgradeInsecureRequests: null, // HTTP'de çalışırken HTTP→HTTPS yükseltmesini kapat
+      upgradeInsecureRequests: IS_PROD ? [] : null,
     },
   },
+  // HSTS: force HTTPS for 1 year in production
+  hsts: IS_PROD ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
 }));
 
 app.use(express.json({ limit: STATE_PAYLOAD_LIMIT }));
@@ -420,6 +427,13 @@ const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   message: { error: 'Çok fazla kayıt denemesi. Bir saat sonra tekrar deneyin.' },
+});
+
+// Kurulum: 5 deneme / saat — internete açık ilk kurulumu kilitler
+const setupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: 'Çok fazla kurulum denemesi.' },
 });
 
 // ── Auth yardımcıları ─────────────────────────────────────────────────────────
@@ -468,6 +482,19 @@ function asyncRoute(handler) {
   return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 }
 
+// CSRF: tüm durum değiştiren (non-safe) API isteklerinde özel başlık zorunlu.
+// Tarayıcı cross-site form/image isteklerine özel başlık ekleyemez → CSRF'e karşı defense-in-depth.
+function requireCsrf(req, res, next) {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    if (req.headers['x-requested-with'] !== 'studyo-app')
+      return res.status(403).json({ error: 'CSRF doğrulama başarısız' });
+  }
+  next();
+}
+
+// Tüm /studyo/* mutating istekleri için CSRF zorunlu (login/register dahil — apiFetch zaten başlık ekliyor)
+appRouter.use(requireCsrf);
+
 function openBrowser(url) {
   const { exec } = require('child_process');
   const cmd = process.platform === 'darwin' ? `open "${url}"`
@@ -483,10 +510,21 @@ function safeUser(row) {
   return { ...safe, goalHours: safe.goal_hours };
 }
 
-const BLOCKED_UPLOAD_EXTENSIONS = new Set([
-  '.js', '.mjs', '.cjs', '.html', '.htm', '.xhtml', '.svg', '.xml',
-  '.php', '.py', '.rb', '.pl', '.sh', '.bash', '.zsh', '.ps1',
-  '.exe', '.dll', '.msi', '.bat', '.cmd', '.jar', '.com', '.vbs',
+// Allow-list: yalnızca güvenli dosya uzantılarına izin ver (block-list yerine)
+const ALLOWED_UPLOAD_EXTENSIONS = new Set([
+  // Belgeler
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.odt', '.ods', '.odp', '.rtf', '.txt', '.md', '.csv',
+  // Görseller
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.heic', '.avif',
+  // Videolar
+  '.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v',
+  // Sesler
+  '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a',
+  // Arşivler
+  '.zip', '.tar', '.gz', '.7z', '.rar',
+  // Veri
+  '.json', '.yaml', '.yml', '.toml',
 ]);
 
 function sanitizeText(value, maxLen = 5000) {
@@ -668,8 +706,8 @@ const upload = multer({
       return cb(err);
     }
     const ext = path.extname(safeName).toLowerCase();
-    if (BLOCKED_UPLOAD_EXTENSIONS.has(ext)) {
-      const err = new Error('Bu dosya türü güvenlik nedeniyle engellendi');
+    if (!ALLOWED_UPLOAD_EXTENSIONS.has(ext)) {
+      const err = new Error('Bu dosya türüne izin verilmiyor');
       err.code = 'UNSAFE_FILE_TYPE';
       return cb(err);
     }
@@ -692,8 +730,13 @@ appRouter.get('/api/setup-status', (_req, res) => {
 });
 
 // İlk admin kurulumu (sadece hiç kullanıcı yokken çalışır)
-appRouter.post('/api/setup', asyncRoute(async (req, res) => {
+appRouter.post('/api/setup', setupLimiter, asyncRoute(async (req, res) => {
   if (q.count.get().c > 0) return res.status(403).json({ error: 'Kurulum zaten tamamlandı' });
+
+  // Opsiyonel bootstrap secret — .env'e SETUP_SECRET eklenirse zorunlu hale gelir
+  const setupSecret = process.env.SETUP_SECRET;
+  if (setupSecret && req.body.setupSecret !== setupSecret)
+    return res.status(403).json({ error: 'Geçersiz kurulum anahtarı' });
 
   const { name, email, password, dept, goalHours, theme, lang } = req.body;
   if (!name?.trim() || !email?.trim() || !password)
@@ -768,6 +811,43 @@ appRouter.post('/api/logout', (_req, res) => {
   res.clearCookie('studyo_token', { path: COOKIE_PATH });
   res.json({ ok: true });
 });
+
+// ── Spotify Proxy ──────────────────────────────────────────────────────────────
+// Frontend Spotify'a direkt istek atmak yerine sunucu üzerinden proxy eder.
+// Bu sayede connectSrc 'self' kalır ve token exchange client'ta görünmez.
+
+appRouter.post('/api/spotify/token', requireAuth, asyncRoute(async (req, res) => {
+  const { code, redirectUri, clientId, codeVerifier } = req.body;
+  if (!code || !redirectUri || !clientId || !codeVerifier)
+    return res.status(400).json({ error: 'Eksik Spotify parametresi' });
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code, redirect_uri: redirectUri, client_id: clientId, code_verifier: codeVerifier,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data.error_description || data.error || 'Spotify hatası' });
+  return res.json(data);
+}));
+
+appRouter.post('/api/spotify/refresh', requireAuth, asyncRoute(async (req, res) => {
+  const { refreshToken, clientId } = req.body;
+  if (!refreshToken || !clientId)
+    return res.status(400).json({ error: 'Eksik Spotify parametresi' });
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token', refresh_token: refreshToken, client_id: clientId,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data.error_description || data.error || 'Spotify yenileme hatası' });
+  return res.json(data);
+}));
 
 // Mevcut kullanıcı
 appRouter.get('/api/me', requireAuth, (req, res) => {

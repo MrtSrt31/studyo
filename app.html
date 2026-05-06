@@ -2896,15 +2896,16 @@ window.spotifyHandleCallback = async function() {
   const clientId = localStorage.getItem('spotify_client_id');
   if (!verifier || !clientId) return false;
   try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
+    // Token exchange proxied through our server — keeps connectSrc at 'self'
+    const res = await fetch(withBasePath('/api/spotify/token'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'studyo-app' },
+      credentials: 'include',
+      body: JSON.stringify({
         code,
-        redirect_uri: window.location.origin + '/',
-        client_id: clientId,
-        code_verifier: verifier,
+        redirectUri: window.location.origin + '/',
+        clientId,
+        codeVerifier: verifier,
       }),
     });
     if (!res.ok) return false;
@@ -2922,10 +2923,12 @@ window.spotifyRefreshToken = async function() {
   const clientId = localStorage.getItem('spotify_client_id');
   if (!refreshToken || !clientId) return null;
   try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
+    // Refresh proxied through our server
+    const res = await fetch(withBasePath('/api/spotify/refresh'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken, client_id: clientId }),
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'studyo-app' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken, clientId }),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -5743,7 +5746,10 @@ Object.assign(window, { MobileTabBar, MobileSettingsSheet, MobileApp, MobileHome
     async function apiFetch(method, url, body) {
       const res = await fetch(withBasePath(url), {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'studyo-app',  // CSRF defense-in-depth
+        },
         body: body ? JSON.stringify(body) : undefined,
         credentials: 'include',
       });

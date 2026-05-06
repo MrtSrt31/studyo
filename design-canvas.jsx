@@ -263,7 +263,7 @@ function DCViewport({ children, minScale = 0.1, maxScale = 8, style = {} }) {
     // ticks leave scale unchanged — skip the cross-frame post for those.
     if (lastPostedScale.current !== scale) {
       lastPostedScale.current = scale;
-      window.parent.postMessage({ type: '__dc_zoom', scale }, '*');
+      window.parent.postMessage({ type: '__dc_zoom', scale }, window.location.origin);
     }
     clearTimeout(saveT.current);
     saveT.current = setTimeout(() => {
@@ -375,17 +375,13 @@ function DCViewport({ children, minScale = 0.1, maxScale = 8, style = {} }) {
     // Host-driven zoom (toolbar % menu). Zooms around viewport centre so the
     // visible midpoint stays fixed — matching the host's iframe-zoom feel.
     const onHostMsg = (e) => {
+      if (e.origin !== window.location.origin) return;
       const d = e.data;
       if (d && d.type === '__dc_set_zoom' && typeof d.scale === 'number') {
         const r = vp.getBoundingClientRect();
         zoomAt(r.left + r.width / 2, r.top + r.height / 2, d.scale / tf.current.scale);
       } else if (d && d.type === '__dc_probe') {
-        // Host's [readyGen] reset asks whether a canvas is present; it
-        // fires on the iframe's native 'load', which for canvases with
-        // images/fonts is after our mount-time announce, so re-announce.
-        // Clear the pan-tick guard so apply() re-posts the current scale
-        // even if it's unchanged — the host just reset dcScale to 1.
-        window.parent.postMessage({ type: '__dc_present' }, '*');
+        window.parent.postMessage({ type: '__dc_present' }, window.location.origin);
         lastPostedScale.current = undefined;
         apply();
       }
@@ -398,7 +394,7 @@ function DCViewport({ children, minScale = 0.1, maxScale = 8, style = {} }) {
     // lastPostedScale reset mirrors the __dc_probe handler: the layout
     // effect's restore-path apply() may already have posted the restored
     // scale (before __dc_present), so clear the guard to re-post it in order.
-    window.parent.postMessage({ type: '__dc_present' }, '*');
+    window.parent.postMessage({ type: '__dc_present' }, window.location.origin);
     lastPostedScale.current = undefined;
     apply();
 
