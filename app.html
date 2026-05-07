@@ -689,7 +689,7 @@ input, textarea { font-family: inherit; }
   <script>
     const TWEAK_DEFAULTS = {
       "lang": "tr",
-      "theme": "light",
+      "theme": "system",
       "density": "comfy",
       "h12": false,
       "widgets": {
@@ -713,6 +713,14 @@ input, textarea { font-family: inherit; }
         localStorage.setItem(_vpKey, JSON.stringify({ x: 60, y: 60, scale: 0.65 }));
       }
     } catch(e) {}
+
+    // Resolves 'system' to 'dark' or 'light' based on OS preference
+    function resolveTheme(t) {
+      if (t === 'system') {
+        try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) { return 'light'; }
+      }
+      return t === 'dark' ? 'dark' : 'light';
+    }
   </script>
 
   <script type="text/babel">
@@ -2804,7 +2812,7 @@ const DEFAULT_APP_STATE = Object.freeze({
   days7: EMPTY_WEEK.slice(),
   todayFocus: 0,
   timer: { focusMin: 25, restMin: 5, countMin: 30 },
-  appearance: { accentColor: '#007AFF', palette: 'warm', spotifyClientId: '', theme: 'light', lang: 'tr' },
+  appearance: { accentColor: '#007AFF', palette: 'warm', spotifyClientId: '', theme: 'system', lang: 'tr' },
   longestSession: 0,
 });
 
@@ -2818,7 +2826,7 @@ function cloneDefaultAppState() {
     days7: EMPTY_WEEK.slice(),
     todayFocus: 0,
     timer: { focusMin: 25, restMin: 5, countMin: 30 },
-    appearance: { accentColor: '#007AFF', palette: 'warm', spotifyClientId: '', theme: 'light', lang: 'tr' },
+    appearance: { accentColor: '#007AFF', palette: 'warm', spotifyClientId: '', theme: 'system', lang: 'tr' },
     longestSession: 0,
   };
 }
@@ -2856,7 +2864,7 @@ function applyAccentTheme(color) {
 
 function applyFullTheme(palette, accentColor, mode) {
   const root = document.documentElement;
-  const currentMode = mode || (document.documentElement.getAttribute('data-theme') || 'light');
+  const currentMode = resolveTheme(mode || document.documentElement.getAttribute('data-theme') || 'system');
   // Apply background palette
   const key = palette || 'warm';
   const paletteDef = PALETTE_PRESETS[key] || PALETTE_PRESETS.warm;
@@ -4842,8 +4850,8 @@ function DesktopHeader({ greeting, now, h12, setTweak, tweaks, motiv, firstName,
         <button className="sd-btn sd-btn--ghost" onClick={() => setTweak('lang', lang === 'tr' ? 'en' : 'tr')}>
           <Icon name="languages" size={14} /> {lang.toUpperCase()}
         </button>
-        <button className="sd-btn sd-btn--ghost" onClick={() => setTweak('theme', tweaks.theme === 'dark' ? 'light' : 'dark')}>
-          <Icon name={tweaks.theme === 'dark' ? 'sun' : 'moon'} size={14} />
+        <button className="sd-btn sd-btn--ghost" onClick={() => setTweak('theme', resolveTheme(tweaks.theme) === 'dark' ? 'light' : 'dark')}>
+          <Icon name={resolveTheme(tweaks.theme) === 'dark' ? 'sun' : 'moon'} size={14} />
         </button>
         <button className="sd-input" onClick={onOpenSearch} style={{ padding: '8px 10px', background: 'var(--surface-elevated)', maxWidth: 280, minWidth: 220, cursor: 'pointer', border: '1px solid var(--separator)' }}>
           <Icon name="search" size={14} style={{ color: 'var(--fg3)' }} />
@@ -5023,7 +5031,7 @@ function SettingsModal({ onClose, appState, onAppStateChange, tweaks, setTweak, 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: 10 }}>
                   {Object.entries(PALETTE_PRESETS).map(([key, def]) => {
                     const on = palette === key;
-                    const bgColor = (tweaks.theme === 'dark' ? def.dark : def.light)['--bg'];
+                    const bgColor = (resolveTheme(tweaks.theme) === 'dark' ? def.dark : def.light)['--bg'];
                     return (
                       <button key={key} onClick={() => setAppearance({ palette: key })} className="sd-btn" style={{
                         padding: 0, borderRadius: 14, border: on ? '2px solid var(--primary)' : '1px solid var(--separator)',
@@ -5058,7 +5066,7 @@ function SettingsModal({ onClose, appState, onAppStateChange, tweaks, setTweak, 
               <div>
                 <div style={{ fontSize: 15, fontWeight: 900, marginBottom: 12 }}>{tr ? 'Tema modu' : 'Theme mode'}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {[['light', tr?'Açık':'Light', 'sun'], ['dark', tr?'Koyu':'Dark', 'moon']].map(([v, l, ic]) => (
+                  {[['light', tr?'Açık':'Light', 'sun'], ['dark', tr?'Koyu':'Dark', 'moon'], ['system', tr?'Sistem':'System', 'monitor']].map(([v, l, ic]) => (
                     <button key={v} onClick={() => setTweak('theme', v)} className="sd-btn" style={{
                       flex: 1, padding: '12px', gap: 8, borderRadius: 12,
                       background: tweaks.theme === v ? 'var(--primary)' : 'var(--surface-elevated)',
@@ -5288,7 +5296,7 @@ function MobileSettingsSheet({ onClose, appState, onAppStateChange, tweaks, setT
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                 {Object.entries(PALETTE_PRESETS).map(([key, def]) => {
                   const on = palette === key;
-                  const bgColor = (tweaks.theme === 'dark' ? def.dark : def.light)['--bg'];
+                 const bgColor = (resolveTheme(tweaks.theme) === 'dark' ? def.dark : def.light)['--bg'];
                   return (
                     <button key={key} onClick={() => setAppearance({ palette: key })} className="sd-btn" style={{
                       padding: 0, borderRadius: 14, border: on ? '2px solid var(--primary)' : '1px solid var(--separator)',
@@ -5326,7 +5334,7 @@ function MobileSettingsSheet({ onClose, appState, onAppStateChange, tweaks, setT
             <div>
               <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 12 }}>{tr ? 'Tema modu' : 'Theme mode'}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                {[['light', tr?'Açık':'Light', 'sun'], ['dark', tr?'Koyu':'Dark', 'moon']].map(([v, l, ic]) => (
+                {[['light', tr?'Açık':'Light', 'sun'], ['dark', tr?'Koyu':'Dark', 'moon'], ['system', tr?'Sistem':'System', 'monitor']].map(([v, l, ic]) => (
                   <button key={v} onClick={() => setTweak('theme', v)} className="sd-btn" style={{
                     flex: 1, padding: '13px', gap: 8, borderRadius: 14,
                     background: tweaks.theme === v ? 'var(--primary)' : 'var(--surface-elevated)',
@@ -5529,8 +5537,8 @@ function MobileHome({ tweaks, setTweak, now, tasks, setTasks, days7, classes, se
           <button className="sd-btn sd-btn--ghost sd-btn--icon" onClick={() => setTweak('lang', lang === 'tr' ? 'en' : 'tr')} style={{ width: 40, height: 40, padding: 0, fontSize: 11, fontWeight: 800 }}>
             {lang.toUpperCase()}
           </button>
-          <button className="sd-btn sd-btn--ghost sd-btn--icon" onClick={() => setTweak('theme', tweaks.theme === 'dark' ? 'light' : 'dark')} style={{ width: 40, height: 40, padding: 0 }}>
-            <Icon name={tweaks.theme === 'dark' ? 'sun' : 'moon'} size={14} />
+          <button className="sd-btn sd-btn--ghost sd-btn--icon" onClick={() => setTweak('theme', resolveTheme(tweaks.theme) === 'dark' ? 'light' : 'dark')} style={{ width: 40, height: 40, padding: 0 }}>
+            <Icon name={resolveTheme(tweaks.theme) === 'dark' ? 'sun' : 'moon'} size={14} />
           </button>
           {onOpenSettings && (
             <button className="sd-btn sd-btn--ghost sd-btn--icon" onClick={onOpenSettings} style={{ width: 40, height: 40, padding: 0 }} title={lang === 'tr' ? 'Ayarlar' : 'Settings'}>
@@ -5608,10 +5616,7 @@ function MobileHome({ tweaks, setTweak, now, tasks, setTasks, days7, classes, se
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-        <StatTile icon="flame" label={t.streak} value={String(streak)} sub={t.streakDays} accent />
-        <StatTile icon="check-check" label={lang === 'tr' ? 'Tamamlanan' : 'Completed'} value={`${completionRate}%`} sub={lang === 'tr' ? `${completedTasks} görev` : `${completedTasks} tasks`} />
-      </div>
+      <StatTile icon="check-check" label={lang === 'tr' ? 'Tamamlanan' : 'Completed'} value={`${completionRate}%`} sub={lang === 'tr' ? `${completedTasks} görev` : `${completedTasks} tasks`} />
 
       <StreakWidget streak={streak} days7={days7} compact />
 
@@ -5903,7 +5908,7 @@ Object.assign(window, { MobileTabBar, MobileSettingsSheet, MobileApp, MobileHome
           accentColor: normalizeHexColor(raw?.appearance?.accentColor, base.appearance.accentColor),
           palette: (raw?.appearance?.palette && PALETTE_PRESETS[raw.appearance.palette]) ? raw.appearance.palette : base.appearance.palette,
           spotifyClientId: typeof raw?.appearance?.spotifyClientId === 'string' ? raw.appearance.spotifyClientId.trim().slice(0, 80) : base.appearance.spotifyClientId,
-          theme: ['light', 'dark'].includes(raw?.appearance?.theme) ? raw.appearance.theme : base.appearance.theme,
+          theme: ['light', 'dark', 'system'].includes(raw?.appearance?.theme) ? raw.appearance.theme : base.appearance.theme,
           lang: ['tr', 'en'].includes(raw?.appearance?.lang) ? raw.appearance.lang : base.appearance.lang,
         },
       };
@@ -6287,7 +6292,7 @@ Object.assign(window, { MobileTabBar, MobileSettingsSheet, MobileApp, MobileHome
       const saveTimerRef = React.useRef(0);
 
       useEffect(() => {
-        document.documentElement.setAttribute('data-theme', tweaks.theme);
+        document.documentElement.setAttribute('data-theme', resolveTheme(tweaks.theme));
       }, [tweaks.theme]);
 
       useEffect(() => {
@@ -6302,6 +6307,24 @@ Object.assign(window, { MobileTabBar, MobileSettingsSheet, MobileApp, MobileHome
         mq.addEventListener('change', h);
         return () => mq.removeEventListener('change', h);
       }, []);
+
+      // React to OS dark/light preference changes when theme = 'system'
+      useEffect(() => {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const h = () => {
+          if (tweaks.theme === 'system') {
+            const resolved = mq.matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', resolved);
+            applyFullTheme(
+              appState?.appearance?.palette || 'warm',
+              appState?.appearance?.accentColor || '#007AFF',
+              'system'
+            );
+          }
+        };
+        mq.addEventListener('change', h);
+        return () => mq.removeEventListener('change', h);
+      }, [tweaks.theme, appState?.appearance?.palette, appState?.appearance?.accentColor]);
 
       useEffect(() => {
         let cancelled = false;
@@ -6335,7 +6358,7 @@ Object.assign(window, { MobileTabBar, MobileSettingsSheet, MobileApp, MobileHome
 
       function applyUser(u) {
         setUser(u);
-        setTweak({ theme: u.theme || 'light', lang: u.lang || 'tr' });
+        setTweak({ theme: u.theme || 'system', lang: u.lang || 'tr' });
       }
 
       useEffect(() => {
